@@ -52,9 +52,56 @@ fn main() {
         x if x % 2 != 0 => println!("{x} is an odd number"),
         _ => unreachable!(),
     }
+
+    println!("");
+
+    // loop & break & continue keyword
+    let mut seconds = 21;
+    loop {
+        if seconds == 0 {
+            println!("Blastoff!");
+            break;
+        }
+
+        if seconds % 2 == 0 {
+            println!("{seconds} seconds (even number), skipping 3 seconds..");
+            seconds -= 3;
+            continue;
+        }
+        println!("{seconds} seconds to blastoff!");
+        seconds -= 1
+    }
+
+    println!("");
+
+    // while loop
+    let mut seconds = 21;
+    while seconds > 0 {
+        if seconds % 2 == 0 {
+            println!("{seconds} seconds (even number), skipping 3 seconds..");
+            seconds -= 3;
+            continue;
+        }
+        println!("{seconds} seconds to blastoff!");
+        seconds -= 1
+    }
+    println!("Blastoff!");
+
+    // recursion
+    println!("");
+    count_down(5);
 }
 
 fn even_or_odd(number: i32) {
     let result = if number % 2 == 0 { "Even" } else { "Odd" };
     println!("The result is: {result}")
+}
+
+fn count_down(second: i32) {
+    if second == 0 {
+        println!("Blastoff!")
+    } else {
+        println!("{second} seconds to blastoff..");
+        count_down(second - 1);
+    }
 }
