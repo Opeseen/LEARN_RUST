@@ -61,6 +61,112 @@ fn main() {
     wash_laundry(LaundryCycle::Cold);
     wash_laundry(LaundryCycle::Hot { temperature: 100 });
     wash_laundry(LaundryCycle::Delicate(String::from("Silk")));
+    println!("");
+
+    // methods on enum
+    LaundryCycle::Cold.wash_laundry();
+    LaundryCycle::Hot { temperature: 100 }.wash_laundry();
+    LaundryCycle::Delicate(String::from("Silk")).wash_laundry();
+    println!("");
+
+    // match keywords
+    OnlineOrderStatus::Delivered.check();
+    Milk::LowFat(1).drink();
+    Milk::LowFat(2).drink();
+    Milk::Whole.drink();
+    println!("");
+
+    // if let construct
+    let my_beverage = Milk::LowFat(3);
+    if let Milk::Whole = my_beverage {
+        println!("You have a whole milk");
+    };
+    if let Milk::LowFat(percent) = my_beverage {
+        println!("Your beverage is {percent}% milk");
+    };
+
+    let my_beverage = Milk::NonDiary {
+        kind: String::from("Oat"),
+    };
+    if let Milk::NonDiary { kind } = my_beverage {
+        println!("Your beverage is {kind} milk")
+    } else {
+        println!("You have some other milk variant");
+    }
+    println!("");
+
+    // let else construct
+    let my_beverage = Milk::LowFat(2);
+
+    let Milk::LowFat(percent) = my_beverage else {
+        println!("You do not have the low fat milk");
+        return;
+    };
+    println!("{percent}% milk is available here");
+}
+enum Milk {
+    LowFat(i32),
+    Whole,
+    NonDiary { kind: String },
+}
+
+#[derive(Debug)]
+enum OnlineOrderStatus {
+    Ordered,
+    Packed,
+    Shipped,
+    Delivered,
+}
+
+impl Milk {
+    fn drink(self) {
+        match self {
+            Milk::LowFat(2) => {
+                println!("Delicious, 2% is my favorite");
+            }
+            Milk::LowFat(percent) => {
+                println!("You got the lowFat {percent} percent version")
+            }
+            Milk::Whole => {
+                println!("You have got the whole")
+            }
+            Milk::NonDiary { kind } => {
+                println!("You have got the {kind} kind type");
+            }
+        }
+    }
+}
+
+impl OnlineOrderStatus {
+    fn check(&self) {
+        match self {
+            OnlineOrderStatus::Ordered | OnlineOrderStatus::Packed => {
+                println!("Your item is been prepped for shipment");
+            }
+            OnlineOrderStatus::Delivered => {
+                println!("Your item has been delivered!");
+            }
+            order_status => {
+                println!("Your item is {order_status:?}");
+            }
+        }
+    }
+}
+
+impl LaundryCycle {
+    fn wash_laundry(&self) {
+        match self {
+            LaundryCycle::Cold => {
+                println!("Running the laundry with cold temperature");
+            }
+            LaundryCycle::Hot { temperature } => {
+                println!("Running a laundry with a temperature of {temperature}");
+            }
+            LaundryCycle::Delicate(fabric_type) => {
+                println!("Running a laundry with a delicate cycle for the {fabric_type}");
+            }
+        }
+    }
 }
 
 fn years_since_release(os: OperatingSystem) -> u32 {
