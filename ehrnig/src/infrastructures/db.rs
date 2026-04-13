@@ -4,13 +4,13 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::time::Duration;
 use uuid::Uuid;
 
-pub async fn create_pool(config: &Config) -> Result<PgPool, sqlx::Error> {
+pub async fn create_pool(url: String) -> Result<PgPool, sqlx::Error> {
     tracing::info!("Connecting to database...");
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
-        .connect(&config.database_url)
+        .connect(&url)
         .await?;
 
     Ok(pool)

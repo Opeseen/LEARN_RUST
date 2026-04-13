@@ -16,7 +16,8 @@ pub async fn save(
 ) -> Result<Uuid, sqlx::Error> {
     let rec = sqlx::query_scalar::<_,Uuid>(
         "INSERT INTO patients (organization_id, first_name, last_name,
-         phone_number, date_of_birth, gender, medical_record_number) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+         phone_number, date_of_birth, gender, medical_record_number) VALUES ($1, $2, $3, $4, $5, $6, $7) 
+         RETURNING id",
     )
     .bind(org_id)
     .bind(&dto.first_name)

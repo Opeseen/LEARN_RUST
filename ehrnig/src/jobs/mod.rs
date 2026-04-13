@@ -1,4 +1,5 @@
 pub mod queue;
-pub mod work;
+pub mod relay;
+pub mod workers;
 
 pub use queue::*;

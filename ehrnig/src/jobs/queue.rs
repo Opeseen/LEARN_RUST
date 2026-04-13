@@ -1,9 +1,12 @@
-use anyhow::Result;
 use deadpool_lapin::Pool;
 use lapin::{BasicProperties, options::*, types::FieldTable};
 use serde::Serialize;
 
-pub async fn publish_event<T: Serialize>(pool: &Pool, queue_name: &str, payload: &T) -> Result<()> {
+pub async fn publish_event<T: Serialize>(
+    pool: &Pool,
+    queue_name: &str,
+    payload: &T,
+) -> anyhow::Result<()> {
     let conn = pool.get().await?;
     let channel = conn.create_channel().await?;
 

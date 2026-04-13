@@ -12,3 +12,19 @@ pub struct OutboxEvent {
     pub created_at: DateTime<Utc>,
     pub processed_at: Option<DateTime<Utc>>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EmailPayload {
+    pub recipient_name: String,
+    pub organization_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "job_type", content = "data")]
+pub enum EHRJob {
+    #[serde(rename = "email.send")]
+    SendEmail(EmailPayload),
+
+    #[serde(rename = "audit.log")]
+    LogAction { user_id: Uuid, action: String },
+}

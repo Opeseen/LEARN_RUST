@@ -6,6 +6,15 @@ pub struct Config {
     pub server_port: u16,
     pub environment: String,
     pub rmq_url: String,
+    pub email_config: EmailConfig,
+}
+
+pub struct EmailConfig {
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub pass: String,
+    pub from: String,
 }
 
 impl Config {
@@ -25,6 +34,17 @@ impl Config {
             environment: env::var("APP_ENV").unwrap_or_else(|_| "development".to_string()),
             rmq_url: env::var("RABBITMQ_URL")
                 .unwrap_or_else(|_| "amqp://guest:guest@localhost:5672".to_string()),
+
+            email_config: EmailConfig {
+                host: env::var("SMTP_HOST").expect("Email host must be set"),
+                port: env::var("SMTP_PORT")
+                    .expect("Email port not set")
+                    .parse()
+                    .unwrap(),
+                user: env::var("SMTP_USER").expect("Email user must be set"),
+                pass: env::var("SMTP_PASSWORD").expect("Email password not set"),
+                from: env::var("FROM_EMAIL").expect("Email from not set"),
+            },
         }
     }
 }

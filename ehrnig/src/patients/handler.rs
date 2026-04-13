@@ -1,5 +1,5 @@
+use crate::events::create_event;
 use crate::infrastructures::db;
-use crate::jobs::publish_event;
 use crate::patients::{CreatePatientDto, repository};
 use crate::routes::AppState;
 use crate::utility::{ApiError, ApiResponse, constants, extract_org_id};
@@ -26,6 +26,7 @@ pub async fn create_patient(
         ApiResponse::error(StatusCode::INTERNAL_SERVER_ERROR, constants::INTERNAL_ERROR)
     })?;
 
+    // create the patient record
     let patient_id = repository::save(&mut tx, org_id, &payload)
         .await
         .map_err(|e| {
@@ -33,19 +34,25 @@ pub async fn create_patient(
             ApiResponse::error(StatusCode::INTERNAL_SERVER_ERROR, constants::INTERNAL_ERROR)
         })?;
 
+    // create the event data
+    let event_data = serde_json::to_value(&payload).unwrap();
+    create_event(
+        &mut tx,
+        org_id,
+        constants::EVENT_PATIENT_CREATED,
+        event_data,
+    )
+    .await
+    .map_err(|_| {
+        ApiResponse::error(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            constants::EVENT_QUEUE_FAILED,
+        )
+    })?;
+
     tx.commit().await.map_err(|_| {
         ApiResponse::error(StatusCode::INTERNAL_SERVER_ERROR, constants::INTERNAL_ERROR)
     })?;
-    // Trigger the Background Event (Asynchronous)
-    let mq_pool = state.mq;
-
-    tokio::spawn(async move {
-        if let Err(e) = publish_event(&mq_pool, constants::EVENT_PATIENT_CREATED, &payload).await {
-            tracing::error!("MQ Error: Failed to publish: {:?}", e);
-        } else {
-            tracing::info!("MQ Success: Event published for {:?}", &payload);
-        }
-    });
 
     Ok((
         StatusCode::CREATED,

@@ -1,6 +1,6 @@
 use crate::organizations::{
     CreateOrganizationDto,
-    repository::{OrganizationRepository, OrganizationStorage},
+    repository::{OrganizationRepository, OrganizationStorage, RepoError},
 };
 use crate::routes::AppState;
 use crate::utility::{ApiError, ApiResponse, constants};
@@ -22,8 +22,12 @@ pub async fn create_organization(
 
     let organization_id = OrganizationStorage::create(&mut *conn, &payload)
         .await
-        .map_err(|_| {
-            ApiResponse::error(StatusCode::INTERNAL_SERVER_ERROR, constants::INTERNAL_ERROR)
+        .map_err(|e| match e {
+            RepoError::AlreadyExists(_) => ApiResponse::error(StatusCode::CONFLICT, &e.to_string()),
+            RepoError::Database(err) => {
+                tracing::error!("{}", err.to_string());
+                ApiResponse::error(StatusCode::INTERNAL_SERVER_ERROR, constants::INTERNAL_ERROR)
+            }
         })?;
 
     Ok((

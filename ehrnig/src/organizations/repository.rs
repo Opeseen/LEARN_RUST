@@ -3,16 +3,28 @@ use async_trait::async_trait;
 use sqlx::PgConnection;
 use uuid::Uuid;
 
+#[derive(Debug, thiserror::Error)]
+pub enum RepoError {
+    #[error("Organization with email '{0}' already exists")]
+    AlreadyExists(String),
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+}
+
 #[async_trait]
 pub trait OrganizationRepository {
     async fn create(
         conn: &mut PgConnection,
         dto: &CreateOrganizationDto,
-    ) -> Result<Uuid, sqlx::Error>;
+    ) -> Result<Uuid, RepoError>;
     async fn find_all(conn: &mut PgConnection) -> Result<Vec<Organization>, sqlx::Error>;
     async fn find_by_id(
         conn: &mut PgConnection,
         id: Uuid,
+    ) -> Result<Option<Organization>, sqlx::Error>;
+    async fn find_by_email(
+        conn: &mut PgConnection,
+        email: &str,
     ) -> Result<Option<Organization>, sqlx::Error>;
 }
 
@@ -23,7 +35,13 @@ impl OrganizationRepository for OrganizationStorage {
     async fn create(
         conn: &mut PgConnection,
         dto: &CreateOrganizationDto,
-    ) -> Result<Uuid, sqlx::Error> {
+    ) -> Result<Uuid, RepoError> {
+        // check if the email exists first
+        let existing = Self::find_by_email(conn, &dto.official_email).await?;
+        if existing.is_some() {
+            return Err(RepoError::AlreadyExists(dto.official_email.clone()));
+        }
+
         let rec = sqlx::query_scalar::<_, Uuid>(
             "INSERT INTO organizations (name, official_email, address)
             VALUES ($1, $2, $3)
@@ -54,6 +72,19 @@ impl OrganizationRepository for OrganizationStorage {
             .bind(id)
             .fetch_optional(conn)
             .await?;
+        Ok(rec)
+    }
+
+    async fn find_by_email(
+        conn: &mut PgConnection,
+        email: &str,
+    ) -> Result<Option<Organization>, sqlx::Error> {
+        let rec = sqlx::query_as::<_, Organization>(
+            "SELECT * FROM organizations WHERE official_email = $1",
+        )
+        .bind(email)
+        .fetch_optional(conn)
+        .await?;
         Ok(rec)
     }
 }
