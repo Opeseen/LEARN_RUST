@@ -1,0 +1,36 @@
+use crate::users::{RegisterUserDto, User};
+use sqlx::PgPool;
+use uuid::Uuid;
+
+#[derive(Debug, thiserror::Error)]
+pub enum RepoError {
+    #[error("User with email '{0}' already exists")]
+    AlreadyExists(String),
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+}
+
+pub async fn create(conn: &PgPool, dto: &RegisterUserDto) -> Result<Uuid, RepoError> {
+    let rec = sqlx::query_scalar(
+        "INSERT INTO users (email, password_hash, first_name, last_name)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id",
+    )
+    .bind(dto.email.to_lowercase())
+    .bind(&dto.password)
+    .bind(&dto.first_name)
+    .bind(&dto.last_name)
+    .fetch_one(conn)
+    .await?;
+
+    Ok(rec)
+}
+
+pub async fn find_by_email(conn: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
+    let rec = sqlx::query_as("SELECT * FROM users WHERE email = $1")
+        .bind(email)
+        .fetch_optional(conn)
+        .await?;
+
+    Ok(rec)
+}

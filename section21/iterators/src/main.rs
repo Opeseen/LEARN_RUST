@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::{env, fs, io, process};
 fn main() {
     // manual iteration
     let numbers = vec![4, 8, 15, 16, 23, 42];
@@ -374,6 +375,343 @@ fn main() {
         .map(|(fne, lne)| format!("{fne} {lne}"))
         .collect::<Vec<String>>();
     println!("{complete_name:?}");
+    println!("");
+
+    // the fold method
+    let earnings = [4, 7, 9, 13];
+    let sum = earnings.into_iter().fold(0, |total, current| {
+        println!("Total: {total}, Current: {current}");
+        total + current
+    });
+    println!("{sum}");
+    println!("");
+
+    let week = [
+        SupportStaff {
+            day: String::from("Monday"),
+            employee: String::from("Brian"),
+        },
+        SupportStaff {
+            day: String::from("Tuesday"),
+            employee: String::from("Can"),
+        },
+        SupportStaff {
+            day: String::from("Wednesday"),
+            employee: String::from("Walter"),
+        },
+    ];
+
+    let map = week.into_iter().fold(HashMap::new(), |mut data, entry| {
+        data.insert(entry.day, entry.employee);
+        data
+    });
+    println!("{map:?}");
+    println!("");
+
+    let earnings: [i32; 0] = [];
+
+    let sum = earnings
+        .into_iter()
+        .reduce(|total, current| total + current);
+    println!("{sum:?}");
+
+    let address_portions = [
+        String::from("123 Eln Street"),
+        String::from("Suburbia"),
+        String::from("New Jersey"),
+    ];
+    let address = address_portions
+        .into_iter()
+        .reduce(|mut accumulator, portion| {
+            accumulator.push_str(", ");
+            accumulator.push_str(&portion);
+            accumulator
+        });
+    println!("{address:?}");
+    println!("");
+
+    let numbers = vec![4, 8, 15, 16, 23, 42];
+    let total: i32 = numbers.iter().sum();
+    println!("{total}");
+    let total: i32 = numbers.iter().product();
+    println!("{total}");
+    let max = numbers.iter().max().unwrap();
+    println!("{max}");
+
+    let count = numbers.iter().count();
+    println!("{count}");
+
+    let numbers = vec![4.6, 8.8, 0.0 / 0.0, 6.2];
+    let total: f64 = numbers.iter().sum();
+    println!("{total}");
+
+    // let max = numbers.iter().max().unwrap(); will not work for f64 as trait bound not implemented
+    let total = numbers
+        .iter()
+        .filter(|number| !number.is_nan())
+        .copied()
+        .fold(0.0, |total, current| total + current);
+    println!("{total}");
+
+    let max = numbers
+        .iter()
+        .filter(|number| !number.is_nan())
+        .copied()
+        .reduce(|accumulator, current| accumulator.max(current));
+    println!("{max:?}");
+    println!("");
+
+    let performance = ["Rustful five", "Rust in peace", "Rustin Bieber"];
+    let last = performance.into_iter().last().unwrap();
+    println!("{last}");
+    let second = performance.into_iter().nth(1).unwrap();
+    println!("{second}");
+    let second_to_last = performance.into_iter().nth_back(1).unwrap();
+    println!("{second_to_last}");
+
+    let target_index = performance
+        .into_iter()
+        .position(|element| element == "Rustin Bieber");
+    println!("{target_index:?}");
+    println!("");
+
+    let fifty_number = 1..=50;
+    for number in fifty_number {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.take(15) {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.rev().take(15) {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.skip(5).take(15) {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.take(15).skip(5) {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.take(15).skip(5).step_by(2) {
+        print!("{number}/");
+    }
+    println!("");
+    let fifty_number = 1..=50;
+    for number in fifty_number.clone().take(15).skip(5).step_by(2) {
+        print!("{number}/");
+    }
+    println!("");
+
+    let mut points = [3, 8, 1, 11, 5];
+    println!("{}", points.is_sorted());
+    points.sort();
+    println!("{points:?}");
+    println!("{}", points.is_sorted());
+    points.reverse();
+    println!("{points:?}");
+    println!("{}", points.is_sorted());
+
+    let mut exercises = ["squat", "bench", "Deadlift"];
+    exercises.sort();
+    println!("{exercises:?}");
+    println!("");
+
+    let mobile = GasStation {
+        snack_count: 100,
+        manager: String::from("Meg Mobil"),
+        employee_count: 3,
+    };
+
+    let exon = GasStation {
+        snack_count: 130,
+        manager: String::from("Eric Exxon"),
+        employee_count: 4,
+    };
+
+    let shell = GasStation {
+        snack_count: 50,
+        manager: String::from("Shane Shell"),
+        employee_count: 2,
+    };
+
+    let mut steps = [mobile, exon, shell];
+    // steps.sort_by_key(|station| station.snack_count);
+    println!("{steps:?}");
+    // steps.sort_by_key(|station| station.employee_count);
+    println!("{steps:?}");
+    steps.sort_by_key(|station| -(station.employee_count as i32));
+    println!("{steps:?}");
+    println!("");
+
+    println!("{:?}", read_file());
+    println!("");
+
+    let args = env::args();
+    for arg in args {
+        println!("{arg}");
+    }
+    println!("");
+
+    let settings = collect_settings();
+    println!("{settings:?}");
+    println!("");
+
+    // reading a directory
+    let directory = fs::read_dir("./").unwrap_or_else(|error| {
+        eprintln!("Could not read directory: {error}");
+        process::exit(1);
+    });
+
+    for entry_result in directory {
+        match entry_result {
+            Ok(entry) => println!("{:?}", entry.path()),
+            Err(error) => {
+                eprintln!("Could not read entry: {error}");
+            }
+        }
+    }
+
+    println!("");
+    println!("{:?}", list_files2());
+    println!("");
+
+    let fifty_numbers = 1..=50;
+    let result = Vec::from_iter(fifty_number.clone());
+    println!("{result:?}");
+
+    let results = fifty_number.clone().collect::<Vec<i32>>();
+    println!("{results:?}");
+    println!("");
+    let unique_set: HashSet<_> = HashSet::from_iter(fifty_number.clone());
+    println!("{unique_set:?}");
+
+    let chars = ['H', 'e', 'l', 'l', 'o'];
+    let greeting = String::from_iter(chars);
+    println!("{greeting}");
+    println!("");
+
+    let songs = [
+        (String::from("I Rust Go On"), String::from("Bob")),
+        (String::from("A Rut of Wind"), String::from("Bob")),
+        (String::from("A Rustworthy man"), String::from("Sheila")),
+    ];
+
+    let playlist = Playlist::from_iter(songs);
+    println!("{playlist:?}");
+    println!("");
+
+    let songs = [
+        (String::from("I Rust Go On"), String::from("Bob")),
+        (String::from("A Rut of Wind"), String::from("Bob")),
+        (String::from("A Rustworthy man"), String::from("Sheila")),
+    ];
+
+    let playlist: Playlist = songs.into_iter().collect();
+    println!("{playlist:?}");
+}
+
+#[derive(Debug)]
+struct Playlist {
+    songs: Vec<String>,
+    users: HashSet<String>,
+}
+
+impl FromIterator<(String, String)> for Playlist {
+    fn from_iter<T: IntoIterator<Item = (String, String)>>(iter: T) -> Self {
+        let mut songs = Vec::new();
+        let mut users = HashSet::new();
+        for (song, user) in iter {
+            songs.push(song);
+            users.insert(user);
+        }
+        Self { songs, users }
+    }
+}
+
+fn list_files2() -> io::Result<()> {
+    for entry_result in fs::read_dir("./")? {
+        let entry = entry_result?;
+        let entry_name = entry.path();
+        let metadata = fs::metadata(&entry_name)?;
+        if metadata.is_file() {
+            println!("{entry_name:?}\n-----------------");
+            let contents = fs::read_to_string(&entry_name)?;
+            println!("{contents}");
+        }
+    }
+    Ok(())
+}
+
+fn list_files() -> io::Result<()> {
+    for entry_result in fs::read_dir("./")? {
+        // Method 1
+        // if let Ok(entry) = entry_result {
+        //     println!("{:?}", entry.path())
+        // }
+
+        // Method 2
+        let entry = entry_result?;
+        println!("{:?}", entry.path());
+    }
+    Ok(())
+}
+
+fn read_file() -> io::Result<()> {
+    let contents = fs::read_to_string("story.txt")?;
+
+    for line in contents.lines() {
+        println!("{line}");
+    }
+
+    Ok(())
+}
+
+fn collect_settings() -> Settings {
+    let mut args = env::args().skip(1).take(3);
+    let video_file = args.next().unwrap_or_else(|| {
+        eprintln!("No video file specified");
+        process::exit(1);
+    });
+
+    let mut settings = args.map(|settings| settings.parse::<bool>().unwrap_or(false));
+
+    let subtitles = settings.next().unwrap_or(false);
+    let high_definitions = settings.next().unwrap_or(false);
+
+    Settings {
+        video_file,
+        subtitles,
+        high_definitions,
+    }
+}
+
+#[derive(Debug)]
+struct Settings {
+    video_file: String,
+    subtitles: bool,
+    high_definitions: bool,
+}
+
+#[derive(Debug)]
+struct GasStation {
+    snack_count: u32,
+    manager: String,
+    employee_count: u32,
+}
+
+#[derive(Debug)]
+struct SupportStaff {
+    day: String,
+    employee: String,
 }
 
 #[derive(Debug)]
