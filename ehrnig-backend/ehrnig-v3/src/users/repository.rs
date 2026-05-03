@@ -10,23 +10,18 @@ pub enum RepoError {
     Database(#[from] sqlx::Error),
 }
 
-pub async fn create_user(
-    conn: &PgPool,
-    dto: &RegisterUserDto,
-    org_id: Uuid,
-) -> Result<Uuid, RepoError> {
+pub async fn create_user(conn: &PgPool, dto: &RegisterUserDto) -> Result<Uuid, RepoError> {
     // check if the user exists
-    let existing = find_by_email(conn, &dto.email, &org_id).await?;
+    let existing = find_by_email(conn, &dto.email).await?;
     if existing.is_some() {
         return Err(RepoError::AlreadyExists(dto.email.clone()));
     }
 
     let rec = sqlx::query_scalar(
-        "INSERT INTO users (organization_id, email, password_hash, first_name, last_name)
-            VALUES ($1, $2, $3, $4, $5)
+        "INSERT INTO users (email, password_hash, first_name, last_name)
+            VALUES ($1, $2, $3, $4)
             RETURNING id",
     )
-    .bind(org_id)
     .bind(dto.email.to_lowercase())
     .bind(&dto.password)
     .bind(&dto.first_name)
@@ -37,13 +32,8 @@ pub async fn create_user(
     Ok(rec)
 }
 
-pub async fn find_by_email(
-    conn: &PgPool,
-    email: &str,
-    org_id: &Uuid,
-) -> Result<Option<User>, sqlx::Error> {
-    let rec = sqlx::query_as("SELECT * FROM users WHERE organization_id = $1 AND email = $2")
-        .bind(org_id)
+pub async fn find_by_email(conn: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
+    let rec = sqlx::query_as("SELECT * FROM users WHERE email = $1")
         .bind(email.to_lowercase())
         .fetch_optional(conn)
         .await?;
